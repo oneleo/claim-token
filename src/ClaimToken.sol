@@ -112,7 +112,7 @@ contract ClaimToken is IClaimToken, Ownable {
         override
         returns (bool isEventClosed)
     {
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
+        bytes32 eventIDHash = _hashString(eventID);
         return !_isEventOngoing[tokenAddress][eventIDHash];
     }
 
@@ -128,7 +128,7 @@ contract ClaimToken is IClaimToken, Ownable {
         override
         returns (uint256 claimedAmount)
     {
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
+        bytes32 eventIDHash = _hashString(eventID);
         return _userClaimedAmount[tokenAddress][eventIDHash][userAddress];
     }
 
@@ -168,7 +168,7 @@ contract ClaimToken is IClaimToken, Ownable {
 
     // Creates a new event with the specified ID and token address
     function createNewEvent(address tokenAddress, string calldata eventID) external override onlyActivatedSigner {
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
+        bytes32 eventIDHash = _hashString(eventID);
         _addEventID(eventIDHash);
         _isEventOngoing[tokenAddress][eventIDHash] = true;
         _addTokenEvent(tokenAddress, eventIDHash);
@@ -181,7 +181,7 @@ contract ClaimToken is IClaimToken, Ownable {
         override
         onlyActivatedSigner
     {
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
+        bytes32 eventIDHash = _hashString(eventID);
 
         require(isTokenEventExists(tokenAddress, eventIDHash), "Event ID does not exist");
 
@@ -199,7 +199,7 @@ contract ClaimToken is IClaimToken, Ownable {
         uint256 amount,
         bytes calldata signerSignature
     ) external override onlyActivatedSigner nonReentrant {
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
+        bytes32 eventIDHash = _hashString(eventID);
         require(_isEventOngoing[tokenAddress][eventIDHash], "Event is closed");
 
         require(getTokenBalance(tokenAddress) >= amount, "Insufficient balance");
@@ -230,6 +230,10 @@ contract ClaimToken is IClaimToken, Ownable {
     // ------------------------
     // -- internal Functions --
     // ------------------------
+
+    function _hashString(string memory input) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(input));
+    }
 
     // Adds a new signer to the list
     function _addSigner(address _signer) internal {
