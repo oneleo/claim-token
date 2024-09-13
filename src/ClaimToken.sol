@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {console} from "forge-std/console.sol";
-
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {MessageHashUtils} from "@oz/utils/cryptography/MessageHashUtils.sol";
 
-import {BaseSignature} from "src/libraries/BaseSignature.sol";
 import {IClaimToken} from "src/interfaces/IClaimToken.sol";
 
 contract ClaimToken is IClaimToken, Ownable {
@@ -208,7 +205,7 @@ contract ClaimToken is IClaimToken, Ownable {
         require(getTokenBalance(tokenAddress) >= amount, "Insufficient balance");
 
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, userAddress, amount));
-        bytes32 ethSignedMessageHash = BaseSignature.getEthSignedMessageHash(claimHash);
+        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(claimHash)));
         address signer = ECDSA.recover(ethSignedMessageHash, signerSignature);
 
         require(_isActivatedSigner[signer], "Invalid signer");

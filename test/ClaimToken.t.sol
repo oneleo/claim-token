@@ -9,11 +9,10 @@ import {Ownable} from "@oz/access/Ownable.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Errors} from "@oz/interfaces/draft-IERC6093.sol";
+import {MessageHashUtils} from "@oz/utils/cryptography/MessageHashUtils.sol";
 
 import {ClaimToken} from "src/ClaimToken.sol";
 import {IClaimToken} from "src/interfaces/IClaimToken.sol";
-
-import {BaseSignature} from "src/libraries/BaseSignature.sol";
 
 contract MockTokenMintable is ERC20 {
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
@@ -256,7 +255,7 @@ contract ClaimTokenTest is Test {
 
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
-        bytes32 ethSignedMessageHash = BaseSignature.getEthSignedMessageHash(claimHash);
+        bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by admin
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
@@ -314,7 +313,7 @@ contract ClaimTokenTest is Test {
         {
             bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
             claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
-            bytes32 ethSignedMessageHash = BaseSignature.getEthSignedMessageHash(claimHash);
+            bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
             // Sign signature by signer
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
@@ -351,7 +350,7 @@ contract ClaimTokenTest is Test {
 
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
-        bytes32 ethSignedMessageHash = BaseSignature.getEthSignedMessageHash(claimHash);
+        bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by other
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(otherKey, ethSignedMessageHash);
@@ -385,7 +384,7 @@ contract ClaimTokenTest is Test {
 
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
-        bytes32 ethSignedMessageHash = BaseSignature.getEthSignedMessageHash(claimHash);
+        bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by admin
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
@@ -414,7 +413,7 @@ contract ClaimTokenTest is Test {
 
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
-        bytes32 ethSignedMessageHash = BaseSignature.getEthSignedMessageHash(claimHash);
+        bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by admin
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
@@ -445,7 +444,7 @@ contract ClaimTokenTest is Test {
 
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, zeroAddress, amount));
-        bytes32 ethSignedMessageHash = BaseSignature.getEthSignedMessageHash(claimHash);
+        bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by admin
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
@@ -475,5 +474,13 @@ contract ClaimTokenTest is Test {
         (bool success,) = address(claimToken).call{value: 1 ether}(abi.encodeWithSignature("nonExistentFunction()"));
 
         assertEq(success, false);
+    }
+
+    // -------------------
+    // -- Util function --
+    // -------------------
+
+    function _getEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
+        return MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(hash)));
     }
 }
