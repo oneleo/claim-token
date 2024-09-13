@@ -27,8 +27,8 @@ contract ClaimToken is IClaimToken, Ownable {
     // token => event => user => amount
     mapping(address => mapping(bytes32 => mapping(address => uint256))) private _userClaimedAmount;
 
-    // token => event => closed
-    mapping(address => mapping(bytes32 => bool)) private _isClosedEvent;
+    // token => event => opened
+    mapping(address => mapping(bytes32 => bool)) private _isEventOngoing;
 
     // token => event
     mapping(address => bytes32[]) private _tokenEventList;
@@ -116,8 +116,7 @@ contract ClaimToken is IClaimToken, Ownable {
         returns (bool isEventClosed)
     {
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-        require(isTokenEventExists(tokenAddress, eventIDHash), "Event ID does not exist");
-        return _isClosedEvent[tokenAddress][eventIDHash];
+        return !_isEventOngoing[tokenAddress][eventIDHash];
     }
 
     // Gets the list of all events
@@ -172,7 +171,7 @@ contract ClaimToken is IClaimToken, Ownable {
     function createNewEvent(address tokenAddress, string calldata eventID) external override onlyActivatedSigner {
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         _addEventID(eventIDHash);
-        _isClosedEvent[tokenAddress][eventIDHash] = false;
+        _isEventOngoing[tokenAddress][eventIDHash] = true;
         _addTokenEvent(tokenAddress, eventIDHash);
         emit EventCreated(tokenAddress, eventID);
     }
@@ -187,9 +186,9 @@ contract ClaimToken is IClaimToken, Ownable {
 
         require(isTokenEventExists(tokenAddress, eventIDHash), "Event ID does not exist");
 
-        require(_isClosedEvent[tokenAddress][eventIDHash] != isEventClosed, "Event already in this state");
+        require(_isEventOngoing[tokenAddress][eventIDHash] != !isEventClosed, "Event already in this state");
 
-        _isClosedEvent[tokenAddress][eventIDHash] = isEventClosed;
+        _isEventOngoing[tokenAddress][eventIDHash] = !isEventClosed;
         emit EventUpdated(tokenAddress, eventID, isEventClosed);
     }
 
@@ -202,7 +201,7 @@ contract ClaimToken is IClaimToken, Ownable {
         bytes calldata signerSignature
     ) external override onlyActivatedSigner nonReentrant {
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-        require(!_isClosedEvent[tokenAddress][eventIDHash], "Event is closed");
+        require(_isEventOngoing[tokenAddress][eventIDHash], "Event is closed");
 
         require(getTokenBalance(tokenAddress) >= amount, "Insufficient balance");
 
