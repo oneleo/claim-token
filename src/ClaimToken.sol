@@ -154,16 +154,18 @@ contract ClaimToken is IClaimToken, Ownable {
         require(signerList.length == isActivatedList.length, "Mismatch in input lengths");
 
         for (uint256 i = 0; i < signerList.length; i++) {
-            _isActivatedSigner[signerList[i]] = isActivatedList[i];
+            address signer = signerList[i];
+            bool isActivatedSigner = isActivatedList[i];
+            _isActivatedSigner[signer] = isActivatedSigner;
 
-            if (isActivatedList[i]) {
-                _addSigner(signerList[i]);
+            if (isActivatedSigner) {
+                _addSigner(signer);
             } else {
-                require(signerList[i] != owner(), "Contract owner cannot be removed");
-                _removeSigner(signerList[i]);
+                require(signer != owner(), "Contract owner cannot be removed");
+                _removeSigner(signer);
             }
 
-            emit SignerUpdated(signerList[i], isActivatedList[i]);
+            emit SignerUpdated(signer, isActivatedSigner);
         }
     }
 
