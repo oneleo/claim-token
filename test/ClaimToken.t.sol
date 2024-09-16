@@ -79,8 +79,6 @@ contract ClaimTokenTest is Test {
 
         assertEq(claimToken.isSignerActivated(signers[0]), true);
         assertEq(claimToken.isSignerActivated(signers[1]), false);
-        assertEq(claimToken.isSignerExists(signers[0]), true);
-        assertEq(claimToken.isSignerExists(signers[1]), false);
 
         assertEq(claimToken.getSigners().length, 2);
         assertEq(claimToken.getSigners()[1], signers[0]);

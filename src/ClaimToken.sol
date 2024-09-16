@@ -5,12 +5,14 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
+import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 import {MessageHashUtils} from "@oz/utils/cryptography/MessageHashUtils.sol";
 
 import {IClaimToken} from "src/interfaces/IClaimToken.sol";
 
 contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     // -----------------------
     // -- Private Variables --
@@ -20,7 +22,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     mapping(address => bool) private _isActivatedSigner;
 
     // List of signers
-    address[] private _signerList;
+    EnumerableSet.AddressSet private _signerSet;
 
     // token => event => user => amount
     mapping(address => mapping(bytes32 => mapping(address => uint256))) private _userClaimedAmount;
@@ -50,7 +52,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
     constructor(address _admin) Ownable(_admin) {
         _isActivatedSigner[_admin] = true;
-        _addSigner(_admin);
+        _signerSet.add(_admin);
     }
 
     // -------------------
@@ -60,16 +62,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     // Checks if a signer is activated
     function isSignerActivated(address _signer) external view override returns (bool isActivated) {
         return _isActivatedSigner[_signer];
-    }
-
-    // Checks if a signer exists
-    function isSignerExists(address _signer) public view returns (bool) {
-        for (uint256 i = 0; i < _signerList.length; i++) {
-            if (_signerList[i] == _signer) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // Gets the closure status of an event
@@ -101,7 +93,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
     // Gets the list of all signers
     function getSigners() external view returns (address[] memory) {
-        return _signerList;
+        return _signerSet.values();
     }
 
     // -------------------
@@ -118,10 +110,10 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
             _isActivatedSigner[signer] = isActivatedSigner;
 
             if (isActivatedSigner) {
-                _addSigner(signer);
+                _signerSet.add(signer);
             } else {
                 require(signer != owner(), "Contract owner cannot be removed");
-                _removeSigner(signer);
+                _signerSet.remove(signer);
             }
 
             emit SignerUpdated(signer, isActivatedSigner);
@@ -191,30 +183,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
     function _hashString(string memory input) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(input));
-    }
-
-    // Adds a new signer to the list
-    function _addSigner(address _signer) internal {
-        if (isSignerExists(_signer)) {
-            return;
-        }
-        _signerList.push(_signer);
-    }
-
-    // Removes a signer from the list
-    function _removeSigner(address _signer) internal {
-        if (!isSignerExists(_signer)) {
-            return;
-        }
-        // Find the index of the signer to be removed
-        for (uint256 i = 0; i < _signerList.length; i++) {
-            if (_signerList[i] == _signer) {
-                // Swap the signer with the last element and remove the last element
-                _signerList[i] = _signerList[_signerList.length - 1];
-                _signerList.pop();
-                break;
-            }
-        }
     }
 
     // ------------------------
