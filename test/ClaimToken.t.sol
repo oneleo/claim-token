@@ -122,6 +122,10 @@ contract ClaimTokenTest is Test {
     function testCreateEventByNewAdmin() public {
         address newAdmin = makeAddr("newAdmin");
 
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit Ownable.OwnershipTransferred(admin, newAdmin);
+
+        // Transfer ownership by admin
         vm.startPrank(admin);
         claimToken.transferOwnership(newAdmin);
         vm.stopPrank();
@@ -152,7 +156,27 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
-    // TODO: testCannotCreateEventByOldAdmin
+    function testCannotCreateEventByOldAdmin() public {
+        address newAdmin = makeAddr("newAdmin");
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit Ownable.OwnershipTransferred(admin, newAdmin);
+
+        // Transfer ownership by admin
+        vm.startPrank(admin);
+        claimToken.transferOwnership(newAdmin);
+        vm.stopPrank();
+
+        string memory eventID = eventName[0];
+        address tokenAddress = address(eventToken[0]);
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(admin)));
+
+        // Create event by old admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddress, eventID);
+        vm.stopPrank();
+    }
 
     function testUpdateEvent() public {
         string memory eventID = eventName[0];
@@ -171,8 +195,48 @@ contract ClaimTokenTest is Test {
         assertEq(claimToken.getEvent(tokenAddress, eventID), true);
     }
 
-    // TODO: testCannotUpdateEventByOther
-    // TODO: testCannotUpdateEventByOldAdmin
+    function testCannotUpdateEventByOldAdmin() public {
+        string memory eventID = eventName[0];
+        address tokenAddress = address(eventToken[0]);
+        address newAdmin = makeAddr("newAdmin");
+
+        // Create event by admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddress, eventID);
+        vm.stopPrank();
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit Ownable.OwnershipTransferred(admin, newAdmin);
+
+        // Transfer ownership by admin
+        vm.startPrank(admin);
+        claimToken.transferOwnership(newAdmin);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(admin)));
+
+        // Update event to close by old admin
+        vm.startPrank(admin);
+        claimToken.updateEvent(tokenAddress, eventID, true);
+        vm.stopPrank();
+    }
+
+    function testCannotUpdateEventByOther() public {
+        string memory eventID = eventName[0];
+        address tokenAddress = address(eventToken[0]);
+
+        // Create event by admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddress, eventID);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(other)));
+
+        // Update event to close by other
+        vm.startPrank(other);
+        claimToken.updateEvent(tokenAddress, eventID, true);
+        vm.stopPrank();
+    }
 
     function testCannotUpdateEventToSameState() public {
         string memory eventID = eventName[0];
@@ -315,7 +379,59 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
-    // TODO: testCannotClaimUsingOldSignerKey
+    function testCannotClaimUsingOldSignerKey() public {
+        address newSigner;
+        uint256 newSignerKey;
+        address[] memory signers = new address[](2);
+        bool[] memory isActivated = new bool[](2);
+
+        // To fix the "Stack too deep" issue
+        {
+            (newSigner, newSignerKey) = makeAddrAndKey("newSigner");
+            signers[0] = newSigner;
+            isActivated[0] = true;
+            signers[1] = signer;
+            isActivated[1] = false;
+        }
+
+        // Update signer by admin
+        vm.startPrank(admin);
+        claimToken.updateSigners(signers, isActivated);
+        vm.stopPrank();
+
+        address tokenAddress = address(eventToken[0]);
+        string memory eventID = eventName[0];
+        uint256 amount = 100 ether;
+
+        // Create Event by admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddress, eventID);
+        vm.stopPrank();
+
+        // Mint token to claimToken for event
+        eventToken[0].mint(address(claimToken), 1000 ether);
+
+        bytes32 claimHash;
+        bytes memory signature;
+
+        // To fix the "Stack too deep" issue
+        {
+            bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
+            claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
+            bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
+
+            // Sign signature by old signer
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
+            signature = abi.encodePacked(r, s, v);
+        }
+
+        vm.expectRevert("Invalid signer");
+
+        // Claim token to user by other
+        vm.startPrank(other);
+        claimToken.claim(tokenAddress, eventID, user, amount, signature);
+        vm.stopPrank();
+    }
 
     function testCannotClaimIfEventIsClosed() public {
         address tokenAddress = address(eventToken[0]);
