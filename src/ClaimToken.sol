@@ -18,23 +18,14 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     // -- Private Variables --
     // -----------------------
 
-    // signer => activated
-    mapping(address => bool) private _isActivatedSigner;
+    mapping(address signer => bool isActivated) private _isActivatedSigner;
+    mapping(address token => mapping(bytes32 eventIDHash => mapping(address user => uint256 amount))) private
+        _userClaimedAmount;
+    mapping(address token => mapping(bytes32 eventIDHash => bool isEventOngoing)) private _isEventOngoing;
+    mapping(address token => uint256 totalClaimedAmount) private _totalClaimedAmount;
 
     // List of signers
     EnumerableSet.AddressSet private _signerSet;
-
-    // token => event => user => amount
-    mapping(address => mapping(bytes32 => mapping(address => uint256))) private _userClaimedAmount;
-
-    // token => event => opened
-    mapping(address => mapping(bytes32 => bool)) private _isEventOngoing;
-
-    // token => totalAmount
-    mapping(address => uint256) private _totalClaimedAmount;
-
-    // Reentrancy guard
-    bool private _locked;
 
     // ---------------
     // -- Modifiers --
