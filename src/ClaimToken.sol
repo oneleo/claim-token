@@ -22,7 +22,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     mapping(address token => mapping(bytes32 eventIDHash => mapping(address user => uint256 amount))) private
         _userClaimedAmount;
     mapping(address token => mapping(bytes32 eventIDHash => bool isEventOngoing)) private _isEventOngoing;
-    mapping(address token => uint256 totalClaimedAmount) private _totalClaimedAmount;
 
     // List of signers
     EnumerableSet.AddressSet private _signerSet;
@@ -143,7 +142,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         require(IERC20(tokenAddress).transfer(userAddress, amount), "Token transfer failed");
 
         _userClaimedAmount[tokenAddress][eventIDHash][userAddress] += amount;
-        _totalClaimedAmount[tokenAddress] += amount;
 
         emit Claimed(claimHash, tokenAddress, eventID, userAddress, amount, signerSignature);
     }
