@@ -42,7 +42,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
     // Ensures function is called by an active signer
     modifier onlyActivatedSigner() {
-        require(_isActivatedSigner[msg.sender], "Not an active signer");
+        require(_isActivatedSigner[_msgSender()], "Not an active signer");
         _;
     }
 
@@ -50,9 +50,13 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     // -- Constructor --
     // -----------------
 
-    constructor(address _admin) Ownable(_admin) {
-        _isActivatedSigner[_admin] = true;
-        _signerSet.add(_admin);
+    constructor(address _admin, address[] memory signers) Ownable(_admin) {
+        bool[] memory isActivatedList = new bool[](signers.length);
+        for (uint256 i = 0; i < signers.length; i++) {
+            isActivatedList[i] = true;
+        }
+
+        _updateSigners(signers, isActivatedList);
     }
 
     // -------------------
@@ -102,26 +106,11 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
     // Updates signers and their activation status
     function updateSigners(address[] memory signerList, bool[] memory isActivatedList) external override onlyOwner {
-        require(signerList.length == isActivatedList.length, "Mismatch in input lengths");
-
-        for (uint256 i = 0; i < signerList.length; i++) {
-            address signer = signerList[i];
-            bool isActivatedSigner = isActivatedList[i];
-            _isActivatedSigner[signer] = isActivatedSigner;
-
-            if (isActivatedSigner) {
-                _signerSet.add(signer);
-            } else {
-                require(signer != owner(), "Contract owner cannot be removed");
-                _signerSet.remove(signer);
-            }
-
-            emit SignerUpdated(signer, isActivatedSigner);
-        }
+        _updateSigners(signerList, isActivatedList);
     }
 
     // Creates a new event with the specified ID and token address
-    function createNewEvent(address tokenAddress, string calldata eventID) external override onlyActivatedSigner {
+    function createNewEvent(address tokenAddress, string calldata eventID) external override onlyOwner {
         bytes32 eventIDHash = _hashString(eventID);
         _isEventOngoing[tokenAddress][eventIDHash] = true;
         emit EventCreated(tokenAddress, eventID);
@@ -131,7 +120,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     function updateEvent(address tokenAddress, string calldata eventID, bool isEventClosed)
         external
         override
-        onlyActivatedSigner
+        onlyOwner
     {
         bytes32 eventIDHash = _hashString(eventID);
 
@@ -148,7 +137,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         address userAddress,
         uint256 amount,
         bytes calldata signerSignature
-    ) external override onlyActivatedSigner nonReentrant {
+    ) external override nonReentrant {
         bytes32 eventIDHash = _hashString(eventID);
         require(_isEventOngoing[tokenAddress][eventIDHash], "Event is closed");
 
@@ -178,11 +167,34 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     }
 
     // ------------------------
-    // -- internal Functions --
+    // -- Internal Functions --
     // ------------------------
 
     function _hashString(string memory input) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(input));
+    }
+
+    // -----------------------
+    // -- Private Functions --
+    // -----------------------
+
+    // Updates signers and their activation status
+    function _updateSigners(address[] memory _signerList, bool[] memory _isActivatedList) private {
+        require(_signerList.length == _isActivatedList.length, "Mismatch in input lengths");
+
+        for (uint256 i = 0; i < _signerList.length; i++) {
+            address signer = _signerList[i];
+            bool isActivatedSigner = _isActivatedList[i];
+            _isActivatedSigner[signer] = isActivatedSigner;
+
+            if (isActivatedSigner) {
+                _signerSet.add(signer);
+            } else {
+                _signerSet.remove(signer);
+            }
+
+            emit SignerUpdated(signer, isActivatedSigner);
+        }
     }
 
     // ------------------------

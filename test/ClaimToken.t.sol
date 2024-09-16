@@ -29,6 +29,8 @@ contract ClaimTokenTest is Test {
 
     address admin;
     uint256 adminKey;
+    address signer;
+    uint256 signerKey;
     address other;
     uint256 otherKey;
     address user;
@@ -38,10 +40,13 @@ contract ClaimTokenTest is Test {
 
     function setUp() public {
         (admin, adminKey) = makeAddrAndKey("admin");
+        (signer, signerKey) = makeAddrAndKey("signer");
         (other, otherKey) = makeAddrAndKey("other");
         user = makeAddr("user");
 
-        claimToken = new ClaimToken(admin);
+        address[] memory signers = new address[](1);
+        signers[0] = signer;
+        claimToken = new ClaimToken(admin, signers);
 
         vm.deal(address(this), 1000 ether);
 
@@ -54,8 +59,9 @@ contract ClaimTokenTest is Test {
 
     function testSetUp() public view {
         console.logAddress(address(claimToken));
-        assertEq(claimToken.isSignerActivated(admin), true);
-        assertEq(claimToken.getSigners()[0], admin);
+        assertEq(claimToken.owner(), admin);
+        assertEq(claimToken.isSignerActivated(signer), true);
+        assertEq(claimToken.getSigners()[0], signer);
     }
 
     function testUpdateSignerByAdmin() public {
@@ -98,20 +104,6 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
-    function testCannotRemoveAdminFromSigner() public {
-        address[] memory signers = new address[](1);
-        signers[0] = admin;
-
-        bool[] memory isActivated = new bool[](1);
-        isActivated[0] = false;
-
-        vm.expectRevert("Contract owner cannot be removed");
-
-        vm.startPrank(admin);
-        claimToken.updateSigners(signers, isActivated);
-        vm.stopPrank();
-    }
-
     function testCreateEventByAdmin() public {
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
@@ -127,17 +119,11 @@ contract ClaimTokenTest is Test {
         assertEq(claimToken.getEvent(tokenAddress, eventID), false);
     }
 
-    function testCreateEventBySigner() public {
-        address signer = makeAddr("signers");
-
-        address[] memory signers = new address[](1);
-        signers[0] = signer;
-
-        bool[] memory isActivated = new bool[](1);
-        isActivated[0] = true;
+    function testCreateEventByNewAdmin() public {
+        address newAdmin = makeAddr("newAdmin");
 
         vm.startPrank(admin);
-        claimToken.updateSigners(signers, isActivated);
+        claimToken.transferOwnership(newAdmin);
         vm.stopPrank();
 
         string memory eventID = eventName[0];
@@ -146,8 +132,8 @@ contract ClaimTokenTest is Test {
         vm.expectEmit(true, true, false, false, address(claimToken));
         emit IClaimToken.EventCreated(tokenAddress, eventID);
 
-        // Create event by signer
-        vm.startPrank(signer);
+        // Create event by newAdmin
+        vm.startPrank(newAdmin);
         claimToken.createNewEvent(tokenAddress, eventID);
         vm.stopPrank();
 
@@ -158,13 +144,15 @@ contract ClaimTokenTest is Test {
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
 
-        vm.expectRevert("Not an active signer");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(other)));
 
         // Create event by other
         vm.startPrank(other);
         claimToken.createNewEvent(tokenAddress, eventID);
         vm.stopPrank();
     }
+
+    // TODO: testCannotCreateEventByOldAdmin
 
     function testUpdateEvent() public {
         string memory eventID = eventName[0];
@@ -183,6 +171,9 @@ contract ClaimTokenTest is Test {
         assertEq(claimToken.getEvent(tokenAddress, eventID), true);
     }
 
+    // TODO: testCannotUpdateEventByOther
+    // TODO: testCannotUpdateEventByOldAdmin
+
     function testCannotUpdateEventToSameState() public {
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
@@ -200,7 +191,7 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
-    function testClaimByAdmin() public {
+    function testClaimUsingSignerKey() public {
         address tokenAddress = address(eventToken[0]);
         string memory eventID = eventName[0];
         uint256 amount = 100 ether;
@@ -217,8 +208,8 @@ contract ClaimTokenTest is Test {
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
-        // Sign signature by admin
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
+        // Sign signature by signer
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectEmit(true, true, true, true, address(claimToken));
@@ -226,8 +217,8 @@ contract ClaimTokenTest is Test {
 
         uint256 tokenBalanceBefore = eventToken[0].balanceOf(user);
 
-        // Claim token to user by admin
-        vm.startPrank(admin);
+        // Claim token to user by other
+        vm.startPrank(other);
         claimToken.claim(tokenAddress, eventID, user, amount, signature);
         vm.stopPrank();
 
@@ -236,16 +227,16 @@ contract ClaimTokenTest is Test {
         assertEq(claimToken.getClaimStatus(tokenAddress, eventID, user), tokenBalanceAfter - tokenBalanceBefore);
     }
 
-    function testClaimBySigner() public {
-        address signer;
-        uint256 signerKey;
+    function testClaimUsingNewSignerKey() public {
+        address newSigner;
+        uint256 newSignerKey;
         address[] memory signers = new address[](1);
         bool[] memory isActivated = new bool[](1);
 
         // To fix the "Stack too deep" issue
         {
-            (signer, signerKey) = makeAddrAndKey("admin");
-            signers[0] = signer;
+            (newSigner, newSignerKey) = makeAddrAndKey("newSigner");
+            signers[0] = newSigner;
             isActivated[0] = true;
         }
 
@@ -258,8 +249,8 @@ contract ClaimTokenTest is Test {
         string memory eventID = eventName[0];
         uint256 amount = 100 ether;
 
-        // Create Event by signer
-        vm.startPrank(signer);
+        // Create Event by admin
+        vm.startPrank(admin);
         claimToken.createNewEvent(tokenAddress, eventID);
         vm.stopPrank();
 
@@ -276,7 +267,7 @@ contract ClaimTokenTest is Test {
             bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
             // Sign signature by signer
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(newSignerKey, ethSignedMessageHash);
             signature = abi.encodePacked(r, s, v);
         }
 
@@ -285,8 +276,8 @@ contract ClaimTokenTest is Test {
 
         uint256 tokenBalanceBefore = eventToken[0].balanceOf(user);
 
-        // Claim token to user by signer
-        vm.startPrank(signer);
+        // Claim token to user by other
+        vm.startPrank(other);
         claimToken.claim(tokenAddress, eventID, user, amount, signature);
         vm.stopPrank();
 
@@ -295,7 +286,7 @@ contract ClaimTokenTest is Test {
         assertEq(claimToken.getClaimStatus(tokenAddress, eventID, user), tokenBalanceAfter - tokenBalanceBefore);
     }
 
-    function testCannotClaimByOther() public {
+    function testCannotClaimUsingOtherKey() public {
         address tokenAddress = address(eventToken[0]);
         string memory eventID = eventName[0];
         uint256 amount = 100 ether;
@@ -318,11 +309,13 @@ contract ClaimTokenTest is Test {
 
         vm.expectRevert("Invalid signer");
 
-        // Claim token to user by admin
-        vm.startPrank(admin);
+        // Claim token to user by other
+        vm.startPrank(other);
         claimToken.claim(tokenAddress, eventID, user, amount, signature);
         vm.stopPrank();
     }
+
+    // TODO: testCannotClaimUsingOldSignerKey
 
     function testCannotClaimIfEventIsClosed() public {
         address tokenAddress = address(eventToken[0]);
@@ -346,14 +339,14 @@ contract ClaimTokenTest is Test {
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
-        // Sign signature by admin
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
+        // Sign signature by signer
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectRevert("Event is closed");
 
-        // Claim token to user by admin
-        vm.startPrank(admin);
+        // Claim token to user by other
+        vm.startPrank(other);
         claimToken.claim(tokenAddress, eventID, user, amount, signature);
         vm.stopPrank();
     }
@@ -375,14 +368,14 @@ contract ClaimTokenTest is Test {
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
-        // Sign signature by admin
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
+        // Sign signature by signer
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectRevert("Insufficient balance");
 
-        // Claim token to user by admin
-        vm.startPrank(admin);
+        // Claim token to user by other
+        vm.startPrank(other);
         claimToken.claim(tokenAddress, eventID, user, amount, signature);
         vm.stopPrank();
     }
@@ -406,14 +399,14 @@ contract ClaimTokenTest is Test {
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, zeroAddress, amount));
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
-        // Sign signature by admin
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminKey, ethSignedMessageHash);
+        // Sign signature by signer
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InvalidReceiver.selector, address(zeroAddress)));
 
-        // Claim token to zeroAddress by admin
-        vm.startPrank(admin);
+        // Claim token to zeroAddress by other
+        vm.startPrank(other);
         claimToken.claim(tokenAddress, eventID, zeroAddress, amount, signature);
         vm.stopPrank();
     }
