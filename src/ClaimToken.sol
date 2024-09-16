@@ -4,11 +4,12 @@ pragma solidity ^0.8.27;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
+import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
 import {MessageHashUtils} from "@oz/utils/cryptography/MessageHashUtils.sol";
 
 import {IClaimToken} from "src/interfaces/IClaimToken.sol";
 
-contract ClaimToken is IClaimToken, Ownable {
+contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
 
     // -----------------------
@@ -42,14 +43,6 @@ contract ClaimToken is IClaimToken, Ownable {
     // ---------------
     // -- Modifiers --
     // ---------------
-
-    // Prevents reentrancy attacks
-    modifier nonReentrant() {
-        require(!_locked, "ReentrancyGuard: reentrant call");
-        _locked = true;
-        _;
-        _locked = false;
-    }
 
     // Ensures function is called by an active signer
     modifier onlyActivatedSigner() {
