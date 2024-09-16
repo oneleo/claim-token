@@ -116,7 +116,6 @@ contract ClaimTokenTest is Test {
 
     function testCreateEventByAdmin() public {
         string memory eventID = eventName[0];
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         address tokenAddress = address(eventToken[0]);
 
         vm.expectEmit(true, true, false, false, address(claimToken));
@@ -128,8 +127,6 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
 
         assertEq(claimToken.getEvent(tokenAddress, eventID), false);
-        assertEq(claimToken.isEventExists(eventIDHash), true);
-        assertEq(claimToken.getEvents()[0], eventIDHash);
     }
 
     function testCreateEventBySigner() public {
@@ -146,7 +143,6 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
 
         string memory eventID = eventName[0];
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         address tokenAddress = address(eventToken[0]);
 
         vm.expectEmit(true, true, false, false, address(claimToken));
@@ -158,8 +154,6 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
 
         assertEq(claimToken.getEvent(tokenAddress, eventID), false);
-        assertEq(claimToken.isEventExists(eventIDHash), true);
-        assertEq(claimToken.getEvents()[0], eventIDHash);
     }
 
     function testCannotCreateEventByOther() public {
@@ -174,26 +168,8 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
-    function testCannotCreateExistingEvent() public {
-        string memory eventID = eventName[0];
-        address tokenAddress = address(eventToken[0]);
-
-        // Create event by admin
-        vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
-        vm.stopPrank();
-
-        vm.expectRevert("Event ID already associated with token");
-
-        // Create existing event by admin
-        vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
-        vm.stopPrank();
-    }
-
     function testUpdateEvent() public {
         string memory eventID = eventName[0];
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         address tokenAddress = address(eventToken[0]);
 
         // Create event by admin
@@ -207,20 +183,6 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
 
         assertEq(claimToken.getEvent(tokenAddress, eventID), true);
-        assertEq(claimToken.isEventExists(eventIDHash), true);
-        assertEq(claimToken.getEvents()[0], eventIDHash);
-    }
-
-    function testCannotUpdateNonExistingEvent() public {
-        string memory eventID = eventName[0];
-        address tokenAddress = address(eventToken[0]);
-
-        vm.expectRevert("Event ID does not exist");
-
-        // Update event to close by admin
-        vm.startPrank(admin);
-        claimToken.updateEvent(tokenAddress, eventID, true);
-        vm.stopPrank();
     }
 
     function testCannotUpdateEventToSameState() public {

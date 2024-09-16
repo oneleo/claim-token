@@ -28,14 +28,8 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     // token => event => opened
     mapping(address => mapping(bytes32 => bool)) private _isEventOngoing;
 
-    // token => event
-    mapping(address => bytes32[]) private _tokenEventList;
-
     // token => totalAmount
     mapping(address => uint256) private _totalClaimedAmount;
-
-    // List of event IDs
-    bytes32[] private _eventList;
 
     // Reentrancy guard
     bool private _locked;
@@ -78,26 +72,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         return false;
     }
 
-    // Checks if an event ID exists
-    function isEventExists(bytes32 _eventIDHash) public view returns (bool) {
-        for (uint256 i = 0; i < _eventList.length; i++) {
-            if (_eventList[i] == _eventIDHash) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Checks if a token has an associated event
-    function isTokenEventExists(address _tokenAddress, bytes32 _eventIDHash) public view returns (bool) {
-        for (uint256 i = 0; i < _tokenEventList[_tokenAddress].length; i++) {
-            if (_tokenEventList[_tokenAddress][i] == _eventIDHash) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // Gets the closure status of an event
     function getEvent(address tokenAddress, string calldata eventID)
         external
@@ -107,11 +81,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     {
         bytes32 eventIDHash = _hashString(eventID);
         return !_isEventOngoing[tokenAddress][eventIDHash];
-    }
-
-    // Gets the list of all events
-    function getEvents() external view returns (bytes32[] memory) {
-        return _eventList;
     }
 
     // Gets the claimed amount for a user in a specific event
@@ -162,9 +131,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     // Creates a new event with the specified ID and token address
     function createNewEvent(address tokenAddress, string calldata eventID) external override onlyActivatedSigner {
         bytes32 eventIDHash = _hashString(eventID);
-        _addEventID(eventIDHash);
         _isEventOngoing[tokenAddress][eventIDHash] = true;
-        _addTokenEvent(tokenAddress, eventIDHash);
         emit EventCreated(tokenAddress, eventID);
     }
 
@@ -175,8 +142,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         onlyActivatedSigner
     {
         bytes32 eventIDHash = _hashString(eventID);
-
-        require(isTokenEventExists(tokenAddress, eventIDHash), "Event ID does not exist");
 
         require(_isEventOngoing[tokenAddress][eventIDHash] != !isEventClosed, "Event already in this state");
 
@@ -250,21 +215,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
                 break;
             }
         }
-    }
-
-    // Adds a new event to the list for a token
-    function _addTokenEvent(address _tokenAddress, bytes32 _eventIDHash) internal {
-        require(!isTokenEventExists(_tokenAddress, _eventIDHash), "Event ID already associated with token");
-
-        _tokenEventList[_tokenAddress].push(_eventIDHash);
-    }
-
-    // Adds a new event ID to the event list
-    function _addEventID(bytes32 eventIDHash) internal {
-        if (isEventExists(eventIDHash)) {
-            return;
-        }
-        _eventList.push(eventIDHash);
     }
 
     // ------------------------
