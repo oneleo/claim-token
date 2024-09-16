@@ -87,7 +87,62 @@ contract ClaimTokenTest is Test {
         assertEq(claimToken.isSignerActivated(signers[1]), false);
 
         assertEq(claimToken.getSigners().length, 2);
+        assertEq(claimToken.getSigners()[0], signer);
         assertEq(claimToken.getSigners()[1], signers[0]);
+    }
+
+    function testUpdateDuplicateSignersByAdmin() public {
+        address[] memory newSigners = new address[](3);
+        newSigners[0] = makeAddr("newSigners[0]");
+        newSigners[1] = makeAddr("newSigners[1]");
+        newSigners[2] = makeAddr("newSigners[2]");
+
+        address[] memory signers = new address[](6);
+        signers[0] = newSigners[0];
+        signers[1] = newSigners[0];
+        signers[2] = newSigners[1];
+        signers[3] = newSigners[1];
+        signers[4] = newSigners[2];
+        signers[5] = newSigners[2];
+
+        bool[] memory isActivated = new bool[](6);
+        isActivated[0] = true;
+        isActivated[1] = true;
+        isActivated[2] = true;
+        isActivated[3] = true;
+        isActivated[4] = true;
+        isActivated[5] = false;
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.SignerUpdated(newSigners[0], true);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.SignerUpdated(newSigners[0], true);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.SignerUpdated(newSigners[1], true);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.SignerUpdated(newSigners[1], true);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.SignerUpdated(newSigners[2], true);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.SignerUpdated(newSigners[2], false);
+
+        vm.startPrank(admin);
+        claimToken.updateSigners(signers, isActivated);
+        vm.stopPrank();
+
+        assertEq(claimToken.isSignerActivated(newSigners[0]), true);
+        assertEq(claimToken.isSignerActivated(newSigners[1]), true);
+        assertEq(claimToken.isSignerActivated(newSigners[2]), false);
+
+        assertEq(claimToken.getSigners().length, 3);
+        assertEq(claimToken.getSigners()[0], signer);
+        assertEq(claimToken.getSigners()[1], newSigners[0]);
+        assertEq(claimToken.getSigners()[2], newSigners[1]);
     }
 
     function testCannotUpdateSignerByOther() public {
