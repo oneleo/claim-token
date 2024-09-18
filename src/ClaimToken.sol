@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
@@ -139,7 +140,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
         require(_isActivatedSigner[signer], "Invalid signer");
 
-        require(IERC20(tokenAddress).transfer(userAddress, amount), "Token transfer failed");
+        SafeERC20.safeTransfer(IERC20(tokenAddress), userAddress, amount);
 
         _userClaimedAmount[tokenAddress][eventIDHash][userAddress] += amount;
 
