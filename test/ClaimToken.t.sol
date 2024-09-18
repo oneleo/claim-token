@@ -144,16 +144,16 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
-    function testCannotUpdateSignerByOther() public {
+    function testCannotUpdateSignerWithZeroSignerAddress() public {
         address[] memory signers = new address[](1);
-        signers[0] = makeAddr("signers[0]");
+        signers[0] = address(0);
 
         bool[] memory isActivated = new bool[](1);
-        isActivated[0] = false;
+        isActivated[0] = true;
 
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(other)));
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.InvalidSignerAddress.selector, signers[0]));
 
-        vm.startPrank(other);
+        vm.startPrank(admin);
         claimToken.updateSigners(signers, isActivated);
         vm.stopPrank();
     }

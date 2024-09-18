@@ -173,6 +173,11 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
         for (uint256 i = 0; i < _signerList.length; i++) {
             address signer = _signerList[i];
+
+            if (signer == address(0)) {
+                revert InvalidSignerAddress(signer);
+            }
+
             bool isActivatedSigner = _isActivatedList[i];
 
             if (isActivatedSigner && _isActivatedSigner[signer]) {
