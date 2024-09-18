@@ -364,8 +364,7 @@ contract ClaimTokenTest is Test {
         // Mint token to claimToken for event
         eventToken[0].mint(address(claimToken), 1000 ether);
 
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-        bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
+        bytes32 claimHash = claimToken.getClaimHash(tokenAddress, eventID, user, amount);
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by signer
@@ -422,8 +421,7 @@ contract ClaimTokenTest is Test {
 
         // To fix the "Stack too deep" issue
         {
-            bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-            claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
+            claimHash = claimToken.getClaimHash(tokenAddress, eventID, user, amount);
             bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
             // Sign signature by signer
@@ -459,8 +457,7 @@ contract ClaimTokenTest is Test {
         // Mint token to claimToken for event
         eventToken[0].mint(address(claimToken), 1000 ether);
 
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-        bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
+        bytes32 claimHash = claimToken.getClaimHash(tokenAddress, eventID, user, amount);
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by other
@@ -512,8 +509,7 @@ contract ClaimTokenTest is Test {
 
         // To fix the "Stack too deep" issue
         {
-            bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-            claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
+            claimHash = claimToken.getClaimHash(tokenAddress, eventID, user, amount);
             bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
             // Sign signature by old signer
@@ -547,8 +543,7 @@ contract ClaimTokenTest is Test {
         // Mint token to claimToken for event
         eventToken[0].mint(address(claimToken), 1000 ether);
 
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-        bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
+        bytes32 claimHash = claimToken.getClaimHash(tokenAddress, eventID, user, amount);
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by signer
@@ -577,8 +572,7 @@ contract ClaimTokenTest is Test {
         // Mint token to claimToken for event
         eventToken[0].mint(address(claimToken), mintingAmount);
 
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-        bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
+        bytes32 claimHash = claimToken.getClaimHash(tokenAddress, eventID, user, amount);
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by signer
@@ -612,8 +606,7 @@ contract ClaimTokenTest is Test {
         // Mint token to claimToken for event
         eventToken[0].mint(address(claimToken), 1000 ether);
 
-        bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
-        bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, zeroAddress, amount));
+        bytes32 claimHash = claimToken.getClaimHash(tokenAddress, eventID, zeroAddress, amount);
         bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
 
         // Sign signature by signer

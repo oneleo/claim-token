@@ -76,6 +76,15 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         return _signerSet.values();
     }
 
+    function getClaimHash(address tokenAddress, string calldata eventID, address userAddress, uint256 amount)
+        public
+        pure
+        returns (bytes32)
+    {
+        bytes32 eventIDHash = _hashString(eventID);
+        return keccak256(abi.encode(tokenAddress, eventIDHash, userAddress, amount));
+    }
+
     // -------------------
     // -- Set Functions --
     // -------------------
@@ -124,7 +133,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         require(_isEventOngoing[tokenAddress][eventIDHash], "Event is closed");
 
 
-        bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, userAddress, amount));
+        bytes32 claimHash = getClaimHash(tokenAddress, eventID, userAddress, amount);
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(claimHash)));
         address signer = ECDSA.recover(ethSignedMessageHash, signerSignature);
 
