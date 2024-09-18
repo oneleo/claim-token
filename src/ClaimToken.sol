@@ -26,16 +26,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     // List of signers
     EnumerableSet.AddressSet private _signerSet;
 
-    // ---------------
-    // -- Modifiers --
-    // ---------------
-
-    // Ensures function is called by an active signer
-    modifier onlyActivatedSigner() {
-        require(_isActivatedSigner[_msgSender()], "Not an active signer");
-        _;
-    }
-
     // -----------------
     // -- Constructor --
     // -----------------
@@ -78,11 +68,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     {
         bytes32 eventIDHash = _hashString(eventID);
         return _userClaimedAmount[tokenAddress][eventIDHash][userAddress];
-    }
-
-    // Gets the contract's token balance for a specified token
-    function getTokenBalance(address _tokenAddress) public view returns (uint256) {
-        return IERC20(_tokenAddress).balanceOf(address(this));
     }
 
     // Gets the list of all signers
@@ -131,7 +116,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         bytes32 eventIDHash = _hashString(eventID);
         require(_isEventOngoing[tokenAddress][eventIDHash], "Event is closed");
 
-        require(getTokenBalance(tokenAddress) >= amount, "Insufficient balance");
 
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, userAddress, amount));
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(claimHash)));
@@ -150,7 +134,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     function transferToken(address tokenAddress, address recipient, uint256 amount) external onlyOwner {
         require(tokenAddress != address(0), "Invalid token address");
         require(recipient != address(0), "Invalid recipient address");
-        require(getTokenBalance(tokenAddress) >= amount, "Insufficient balance");
 
         IERC20(tokenAddress).transfer(recipient, amount);
     }
@@ -184,19 +167,5 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
             emit SignerUpdated(signer, isActivatedSigner);
         }
-    }
-
-    // ------------------------
-    // -- Reserved functions --
-    // ------------------------
-
-    // Rejects ETH transfers to the contract
-    receive() external payable {
-        revert("ETH transfers are not accepted");
-    }
-
-    // Rejects unexpected function calls and ETH transfers
-    fallback() external payable {
-        revert("Unexpected call or ETH transfer is not accepted");
     }
 }

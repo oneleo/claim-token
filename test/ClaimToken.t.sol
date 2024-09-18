@@ -526,6 +526,7 @@ contract ClaimTokenTest is Test {
         address tokenAddress = address(eventToken[0]);
         string memory eventID = eventName[0];
         uint256 amount = 100 ether;
+        uint256 mintingAmount = 10 ether;
 
         // Create Event by admin
         vm.startPrank(admin);
@@ -533,7 +534,7 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
 
         // Mint token to claimToken for event
-        eventToken[0].mint(address(claimToken), 10 ether);
+        eventToken[0].mint(address(claimToken), mintingAmount);
 
         bytes32 eventIDHash = keccak256(abi.encodePacked(eventID));
         bytes32 claimHash = keccak256(abi.encode(tokenAddress, eventIDHash, user, amount));
@@ -543,7 +544,11 @@ contract ClaimTokenTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        vm.expectRevert("Insufficient balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientBalance.selector, address(claimToken), mintingAmount, amount
+            )
+        );
 
         // Claim token to user by other
         vm.startPrank(other);
@@ -580,12 +585,6 @@ contract ClaimTokenTest is Test {
         vm.startPrank(other);
         claimToken.claim(tokenAddress, eventID, zeroAddress, amount, signature);
         vm.stopPrank();
-    }
-
-    function testCannotReceiveETH() public {
-        vm.expectRevert("ETH transfers are not accepted");
-
-        payable(claimToken).transfer(1 ether);
     }
 
     function testCannotCallNonExistentFunction() public {
