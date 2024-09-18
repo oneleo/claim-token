@@ -557,6 +557,54 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
+    function testCannotClaimIfUserClaimedToken() public {
+        address tokenAddress = address(eventToken[0]);
+        string memory eventID = eventName[0];
+        uint256 amount = 100 ether;
+
+        // Create Event by admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddress, eventID);
+        vm.stopPrank();
+
+        // Mint token to claimToken for event
+        eventToken[0].mint(address(claimToken), 1000 ether);
+
+        bytes32 claimHash;
+        bytes memory signature;
+
+        // To fix the "Stack too deep" issue
+        {
+            claimHash = claimToken.getClaimHash(tokenAddress, eventID, user, amount);
+            bytes32 ethSignedMessageHash = _getEthSignedMessageHash(claimHash);
+
+            // Sign signature by signer
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
+            signature = abi.encodePacked(r, s, v);
+        }
+
+        vm.expectEmit(true, true, true, true, address(claimToken));
+        emit IClaimToken.Claimed(claimHash, tokenAddress, eventID, user, amount, signature);
+
+        uint256 tokenBalanceBefore = eventToken[0].balanceOf(user);
+
+        // Claim token to user by other
+        vm.startPrank(other);
+        claimToken.claim(tokenAddress, eventID, user, amount, signature);
+        vm.stopPrank();
+
+        uint256 tokenBalanceAfter = eventToken[0].balanceOf(user);
+
+        assertEq(claimToken.getClaimStatus(tokenAddress, eventID, user), tokenBalanceAfter - tokenBalanceBefore);
+
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.UserAlreadyClaimedToken.selector, user));
+
+        // Claim token to user by admin
+        vm.startPrank(admin);
+        claimToken.claim(tokenAddress, eventID, user, amount, signature);
+        vm.stopPrank();
+    }
+
     function testCannotClaimWithInsufficientBalance() public {
         address tokenAddress = address(eventToken[0]);
         string memory eventID = eventName[0];

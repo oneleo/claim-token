@@ -133,6 +133,9 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         bytes32 eventIDHash = _hashString(eventID);
         require(_isEventOngoing[tokenAddress][eventIDHash], "Event is closed");
 
+        if (_userClaimedAmount[tokenAddress][eventIDHash][userAddress] != 0) {
+            revert UserAlreadyClaimedToken(userAddress);
+        }
 
         bytes32 claimHash = getClaimHash(tokenAddress, eventID, userAddress, amount);
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(claimHash)));
