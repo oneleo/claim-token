@@ -64,6 +64,24 @@ contract ClaimTokenTest is Test {
         assertEq(claimToken.getSigners()[0], signer);
     }
 
+    function testCannotSetUpWithZeroAdminAddress() public {
+        address otherAdmin = address(0);
+        address[] memory signers = new address[](0);
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, otherAdmin));
+
+        new ClaimToken(otherAdmin, signers);
+    }
+
+    function testCannotSetUpWithZeroSignerAddress() public {
+        address[] memory signers = new address[](1);
+        signers[0] = address(0);
+
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.InvalidSignerAddress.selector, signers[0]));
+
+        new ClaimToken(admin, signers);
+    }
+
     function testUpdateSignerByAdmin() public {
         address[] memory signers = new address[](2);
         signers[0] = makeAddr("signers[0]");
