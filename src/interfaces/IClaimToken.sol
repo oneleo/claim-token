@@ -27,6 +27,18 @@ interface IClaimToken {
         bytes signerSignature
     );
 
+    // ------------
+    // -- Errors --
+    // ------------
+
+    error InvalidSignerAddress(address signer);
+
+    error SignerAlreadyActive(address signer);
+
+    error SignerAlreadyDeactivated(address signer);
+
+    error UserAlreadyClaimedToken(address user);
+
     // -------------------
     // -- Get Functions --
     // -------------------
