@@ -174,13 +174,22 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < _signerList.length; i++) {
             address signer = _signerList[i];
             bool isActivatedSigner = _isActivatedList[i];
-            _isActivatedSigner[signer] = isActivatedSigner;
+
+            if (isActivatedSigner && _isActivatedSigner[signer]) {
+                revert SignerAlreadyActive(signer);
+            }
+
+            if (!isActivatedSigner && !_isActivatedSigner[signer]) {
+                revert SignerAlreadyDeactivated(signer);
+            }
 
             if (isActivatedSigner) {
                 _signerSet.add(signer);
             } else {
                 _signerSet.remove(signer);
             }
+
+            _isActivatedSigner[signer] = isActivatedSigner;
 
             emit SignerUpdated(signer, isActivatedSigner);
         }
