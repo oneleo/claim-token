@@ -22,6 +22,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     mapping(address token => mapping(bytes32 eventIDHash => mapping(address user => uint256 amount))) private
         _userClaimedAmount;
     mapping(address token => mapping(bytes32 eventIDHash => bool isEventOngoing)) private _isEventOngoing;
+    mapping(address token => mapping(bytes32 eventIDHash => bool isEventCreated)) private _isEventCreated;
 
     // List of signers
     EnumerableSet.AddressSet private _signerSet;
@@ -87,7 +88,11 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     // Creates a new event with the specified ID and token address
     function createNewEvent(address tokenAddress, string calldata eventID) external override onlyOwner {
         bytes32 eventIDHash = _hashString(eventID);
+
+        require(!_isEventCreated[tokenAddress][eventIDHash], "Event ID for the token is created");
+
         _isEventOngoing[tokenAddress][eventIDHash] = true;
+        _isEventCreated[tokenAddress][eventIDHash] = true;
         emit EventCreated(tokenAddress, eventID);
     }
 
@@ -98,6 +103,8 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         onlyOwner
     {
         bytes32 eventIDHash = _hashString(eventID);
+
+        require(_isEventCreated[tokenAddress][eventIDHash], "Event ID for the token not created yet");
 
         require(_isEventOngoing[tokenAddress][eventIDHash] != !isEventClosed, "Event already in this state");
 

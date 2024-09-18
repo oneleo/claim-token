@@ -233,6 +233,28 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
+    function testCannotCreateEventThatAlreadyExists() public {
+        string memory eventID = eventName[0];
+        address tokenAddress = address(eventToken[0]);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.EventCreated(tokenAddress, eventID);
+
+        // Create event by admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddress, eventID);
+        vm.stopPrank();
+
+        assertEq(claimToken.getEvent(tokenAddress, eventID), false);
+
+        vm.expectRevert("Event ID for the token is created");
+
+        // Create event by admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddress, eventID);
+        vm.stopPrank();
+    }
+
     function testUpdateEvent() public {
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
@@ -289,6 +311,25 @@ contract ClaimTokenTest is Test {
 
         // Update event to close by other
         vm.startPrank(other);
+        claimToken.updateEvent(tokenAddress, eventID, true);
+        vm.stopPrank();
+    }
+
+    function testCannotUpdateEventThatDoesNotExist() public {
+        string memory eventID = eventName[0];
+        address tokenAddress = address(eventToken[0]);
+
+        vm.expectRevert("Event ID for the token not created yet");
+
+        // Update event to open by admin
+        vm.startPrank(admin);
+        claimToken.updateEvent(tokenAddress, eventID, false);
+        vm.stopPrank();
+
+        vm.expectRevert("Event ID for the token not created yet");
+
+        // Update event to close by admin
+        vm.startPrank(admin);
         claimToken.updateEvent(tokenAddress, eventID, true);
         vm.stopPrank();
     }
