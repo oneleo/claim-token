@@ -39,6 +39,16 @@ interface IClaimToken {
 
     error UserAlreadyClaimedToken(address user);
 
+    error EventIdTokenAlreadyCreated();
+
+    error EventIdTokenNotCreated();
+
+    error EventAlreadyInState();
+
+    error EventClosed();
+
+    error MismatchInInputLengths();
+
     // -------------------
     // -- Get Functions --
     // -------------------

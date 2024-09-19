@@ -264,7 +264,7 @@ contract ClaimTokenTest is Test {
 
         assertEq(claimToken.getEvent(tokenAddress, eventID), false);
 
-        vm.expectRevert("Event ID for the token is created");
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.EventIdTokenAlreadyCreated.selector));
 
         // Create event by admin
         vm.startPrank(admin);
@@ -336,14 +336,14 @@ contract ClaimTokenTest is Test {
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
 
-        vm.expectRevert("Event ID for the token not created yet");
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.EventIdTokenNotCreated.selector));
 
         // Update event to open by admin
         vm.startPrank(admin);
         claimToken.updateEvent(tokenAddress, eventID, false);
         vm.stopPrank();
 
-        vm.expectRevert("Event ID for the token not created yet");
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.EventIdTokenNotCreated.selector));
 
         // Update event to close by admin
         vm.startPrank(admin);
@@ -360,7 +360,7 @@ contract ClaimTokenTest is Test {
         claimToken.createNewEvent(tokenAddress, eventID);
         vm.stopPrank();
 
-        vm.expectRevert("Event already in this state");
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.EventAlreadyInState.selector));
 
         // Update event to open by admin
         vm.startPrank(admin);
@@ -481,7 +481,7 @@ contract ClaimTokenTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(otherKey, ethSignedMessageHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        vm.expectRevert("Invalid signer");
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.InvalidSignerAddress.selector, other));
 
         // Claim token to user by other
         vm.startPrank(other);
@@ -534,7 +534,7 @@ contract ClaimTokenTest is Test {
             signature = abi.encodePacked(r, s, v);
         }
 
-        vm.expectRevert("Invalid signer");
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.InvalidSignerAddress.selector, signer));
 
         // Claim token to user by other
         vm.startPrank(other);
@@ -567,7 +567,7 @@ contract ClaimTokenTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, ethSignedMessageHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        vm.expectRevert("Event is closed");
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.EventClosed.selector));
 
         // Claim token to user by other
         vm.startPrank(other);

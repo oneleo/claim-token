@@ -99,7 +99,7 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     function createNewEvent(address tokenAddress, string calldata eventID) external override onlyOwner {
         bytes32 eventIDHash = _hashString(eventID);
 
-        require(!_isEventCreated[tokenAddress][eventIDHash], "Event ID for the token is created");
+        require(!_isEventCreated[tokenAddress][eventIDHash], EventIdTokenAlreadyCreated());
 
         _isEventOngoing[tokenAddress][eventIDHash] = true;
         _isEventCreated[tokenAddress][eventIDHash] = true;
@@ -114,9 +114,9 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     {
         bytes32 eventIDHash = _hashString(eventID);
 
-        require(_isEventCreated[tokenAddress][eventIDHash], "Event ID for the token not created yet");
+        require(_isEventCreated[tokenAddress][eventIDHash], EventIdTokenNotCreated());
 
-        require(_isEventOngoing[tokenAddress][eventIDHash] != !isEventClosed, "Event already in this state");
+        require(_isEventOngoing[tokenAddress][eventIDHash] != !isEventClosed, EventAlreadyInState());
 
         _isEventOngoing[tokenAddress][eventIDHash] = !isEventClosed;
         emit EventUpdated(tokenAddress, eventID, isEventClosed);
@@ -131,17 +131,15 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         bytes calldata signerSignature
     ) external override nonReentrant {
         bytes32 eventIDHash = _hashString(eventID);
-        require(_isEventOngoing[tokenAddress][eventIDHash], "Event is closed");
+        require(_isEventOngoing[tokenAddress][eventIDHash], EventClosed());
 
-        if (_userClaimedAmount[tokenAddress][eventIDHash][userAddress] != 0) {
-            revert UserAlreadyClaimedToken(userAddress);
-        }
+        require(_userClaimedAmount[tokenAddress][eventIDHash][userAddress] == 0, UserAlreadyClaimedToken(userAddress));
 
         bytes32 claimHash = getClaimHash(tokenAddress, eventID, userAddress, amount);
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(claimHash)));
         address signer = ECDSA.recover(ethSignedMessageHash, signerSignature);
 
-        require(_isActivatedSigner[signer], "Invalid signer");
+        require(_isActivatedSigner[signer], InvalidSignerAddress(signer));
 
         SafeERC20.safeTransfer(IERC20(tokenAddress), userAddress, amount);
 
@@ -164,23 +162,18 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
     // Updates signers and their activation status
     function _updateSigners(address[] memory _signerList, bool[] memory _isActivatedList) private {
-        require(_signerList.length == _isActivatedList.length, "Mismatch in input lengths");
+        require(_signerList.length == _isActivatedList.length, MismatchInInputLengths());
 
         for (uint256 i = 0; i < _signerList.length; i++) {
             address signer = _signerList[i];
 
-            if (signer == address(0)) {
-                revert InvalidSignerAddress(signer);
-            }
+            require(signer != address(0), InvalidSignerAddress(signer));
 
             bool isActivatedSigner = _isActivatedList[i];
 
             if (isActivatedSigner == _isActivatedSigner[signer]) {
-                if (isActivatedSigner) {
-                    revert SignerAlreadyActive(signer);
-                } else {
-                    revert SignerAlreadyDeactivated(signer);
-                }
+                require(!isActivatedSigner, SignerAlreadyActive(signer));
+                require(isActivatedSigner, SignerAlreadyDeactivated(signer));
             }
 
             if (isActivatedSigner) {
