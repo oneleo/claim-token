@@ -124,6 +124,21 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
+    function testCannotUpdateSignerIfMismatchInInputLengths() public {
+        address[] memory signers = new address[](2);
+        signers[0] = makeAddr("signers[0]");
+        signers[1] = makeAddr("signers[1]");
+
+        bool[] memory isActivated = new bool[](1);
+        isActivated[0] = true;
+
+        vm.expectRevert(abi.encodeWithSelector(IClaimToken.MismatchInInputLengths.selector));
+
+        vm.startPrank(admin);
+        claimToken.updateSigners(signers, isActivated);
+        vm.stopPrank();
+    }
+
     function testCannotUpdateSignerIfAlreadyActivated() public {
         address[] memory signers = new address[](1);
         signers[0] = signer;
