@@ -73,7 +73,7 @@ interface IClaimToken {
     function updateSigners(address[] calldata signerList, bool[] calldata isActivatedList) external;
 
     // Function to create a new event
-    function createNewEvent(address tokenAddress, string calldata eventID) external;
+    function createNewEvent(address tokenAddress, string calldata eventID, bool startEvent) external;
 
     // Function to update event status (active or closed)
     function updateEvent(address tokenAddress, string calldata eventID, bool isEventClosed) external;

@@ -96,12 +96,16 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
     }
 
     // Creates a new event with the specified ID and token address
-    function createNewEvent(address tokenAddress, string calldata eventID) external override onlyOwner {
+    function createNewEvent(address tokenAddress, string calldata eventID, bool startEvent)
+        external
+        override
+        onlyOwner
+    {
         bytes32 eventIDHash = _hashString(eventID);
 
         require(!_isEventCreated[tokenAddress][eventIDHash], EventIdTokenAlreadyCreated());
 
-        _isEventOngoing[tokenAddress][eventIDHash] = true;
+        _isEventOngoing[tokenAddress][eventIDHash] = startEvent;
         _isEventCreated[tokenAddress][eventIDHash] = true;
         emit EventCreated(tokenAddress, eventID);
     }

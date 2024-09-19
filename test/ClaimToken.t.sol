@@ -192,18 +192,29 @@ contract ClaimTokenTest is Test {
     }
 
     function testCreateEventByAdmin() public {
-        string memory eventID = eventName[0];
-        address tokenAddress = address(eventToken[0]);
+        address[] memory tokenAddresses = new address[](2);
+        tokenAddresses[0] = address(eventToken[0]);
+        tokenAddresses[1] = address(eventToken[1]);
 
         vm.expectEmit(true, true, false, false, address(claimToken));
-        emit IClaimToken.EventCreated(tokenAddress, eventID);
+        emit IClaimToken.EventCreated(tokenAddresses[0], eventName[0]);
 
         // Create event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddresses[0], eventName[0], true);
         vm.stopPrank();
 
-        assertEq(claimToken.getEvent(tokenAddress, eventID), false);
+        assertEq(claimToken.getEvent(tokenAddresses[0], eventName[0]), false);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit IClaimToken.EventCreated(tokenAddresses[1], eventName[1]);
+
+        // Create event by admin
+        vm.startPrank(admin);
+        claimToken.createNewEvent(tokenAddresses[1], eventName[1], false);
+        vm.stopPrank();
+
+        assertEq(claimToken.getEvent(tokenAddresses[1], eventName[1]), true);
     }
 
     function testCreateEventByNewAdmin() public {
@@ -225,7 +236,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by newAdmin
         vm.startPrank(newAdmin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         assertEq(claimToken.getEvent(tokenAddress, eventID), false);
@@ -239,7 +250,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by other
         vm.startPrank(other);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
     }
 
@@ -261,7 +272,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by old admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
     }
 
@@ -274,7 +285,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         assertEq(claimToken.getEvent(tokenAddress, eventID), false);
@@ -283,7 +294,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, false);
         vm.stopPrank();
     }
 
@@ -293,7 +304,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Update event to close by admin
@@ -311,7 +322,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         vm.expectEmit(true, true, false, false, address(claimToken));
@@ -336,7 +347,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(other)));
@@ -372,7 +383,7 @@ contract ClaimTokenTest is Test {
 
         // Create event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         vm.expectRevert(abi.encodeWithSelector(IClaimToken.EventAlreadyInState.selector));
@@ -390,7 +401,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Mint token to claimToken for event
@@ -442,7 +453,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Mint token to claimToken for event
@@ -483,7 +494,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Mint token to claimToken for event
@@ -530,7 +541,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Mint token to claimToken for event
@@ -564,7 +575,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Update event to close by admin
@@ -597,7 +608,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Mint token to claimToken for event
@@ -646,7 +657,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Mint token to claimToken for event
@@ -680,7 +691,7 @@ contract ClaimTokenTest is Test {
 
         // Create Event by admin
         vm.startPrank(admin);
-        claimToken.createNewEvent(tokenAddress, eventID);
+        claimToken.createNewEvent(tokenAddress, eventID, true);
         vm.stopPrank();
 
         // Mint token to claimToken for event
