@@ -57,6 +57,10 @@ contract ClaimTokenTest is Test {
         eventToken[1] = new MockTokenMintable("EventToken[1]", "ET1");
     }
 
+    // -------------------------------------
+    // -- Test: setUp() and constructor() --
+    // -------------------------------------
+
     function testSetUp() public view {
         console.logAddress(address(claimToken));
         assertEq(claimToken.owner(), admin);
@@ -81,6 +85,10 @@ contract ClaimTokenTest is Test {
 
         new ClaimToken(admin, signers);
     }
+
+    // ---------------------------
+    // -- Test: updateSigners() --
+    // ---------------------------
 
     function testUpdateSignerByAdmin() public {
         address[] memory signers = new address[](2);
@@ -191,6 +199,10 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
+    // ----------------------------
+    // -- Test: createNewEvent() --
+    // ----------------------------
+
     function testCreateEventByAdmin() public {
         address[] memory tokenAddresses = new address[](2);
         tokenAddresses[0] = address(eventToken[0]);
@@ -298,6 +310,10 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
+    // -------------------------
+    // -- Test: updateEvent() --
+    // -------------------------
+
     function testUpdateEvent() public {
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
@@ -393,6 +409,10 @@ contract ClaimTokenTest is Test {
         claimToken.updateEvent(tokenAddress, eventID, false);
         vm.stopPrank();
     }
+
+    // -------------------
+    // -- Test: claim() --
+    // -------------------
 
     function testClaimUsingSignerKey() public {
         address tokenAddress = address(eventToken[0]);
@@ -711,6 +731,10 @@ contract ClaimTokenTest is Test {
         claimToken.claim(tokenAddress, eventID, zeroAddress, amount, signature);
         vm.stopPrank();
     }
+
+    // ----------------------
+    // -- Test: fallback() --
+    // ----------------------
 
     function testCannotCallNonExistentFunction() public {
         (bool success,) = address(claimToken).call(abi.encodeWithSignature("nonExistentFunction()"));
