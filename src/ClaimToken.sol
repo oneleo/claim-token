@@ -150,14 +150,6 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
         emit Claimed(claimHash, tokenAddress, eventID, userAddress, amount, signerSignature);
     }
 
-    // Transfers tokens from the contract to a recipient
-    function transferToken(address tokenAddress, address recipient, uint256 amount) external onlyOwner {
-        require(tokenAddress != address(0), "Invalid token address");
-        require(recipient != address(0), "Invalid recipient address");
-
-        IERC20(tokenAddress).transfer(recipient, amount);
-    }
-
     // ------------------------
     // -- Internal Functions --
     // ------------------------
