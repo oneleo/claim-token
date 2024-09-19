@@ -175,12 +175,12 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
 
             bool isActivatedSigner = _isActivatedList[i];
 
-            if (isActivatedSigner && _isActivatedSigner[signer]) {
-                revert SignerAlreadyActive(signer);
-            }
-
-            if (!isActivatedSigner && !_isActivatedSigner[signer]) {
-                revert SignerAlreadyDeactivated(signer);
+            if (isActivatedSigner == _isActivatedSigner[signer]) {
+                if (isActivatedSigner) {
+                    revert SignerAlreadyActive(signer);
+                } else {
+                    revert SignerAlreadyDeactivated(signer);
+                }
             }
 
             if (isActivatedSigner) {
