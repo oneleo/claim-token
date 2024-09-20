@@ -33,11 +33,11 @@ The `ClaimToken` contract facilitates secure and efficient token distribution fo
 
 Here are the setup and update processes:
 
-1. **Setup Diagram**:  
-   ![Setup Diagram](assets/setupDiagram.png)
+1. **Setup**:  
+   ![Setup](assets/setup.png)
 
-2. **Update Diagram**:  
-   ![Update Diagram](assets/updateDiagram.png)
+2. **Update**:  
+   ![Update](assets/update.png)
 
 ## Claim Process Flow
 
