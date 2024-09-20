@@ -176,8 +176,11 @@ contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
             bool isActivatedSigner = _isActivatedList[i];
 
             if (isActivatedSigner == _isActivatedSigner[signer]) {
-                require(!isActivatedSigner, SignerAlreadyActive(signer));
-                require(isActivatedSigner, SignerAlreadyDeactivated(signer));
+                if (isActivatedSigner) {
+                    revert SignerAlreadyActive(signer);
+                } else {
+                    revert SignerAlreadyDeactivated(signer);
+                }
             }
 
             if (isActivatedSigner) {
