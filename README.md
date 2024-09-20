@@ -1,17 +1,33 @@
-## Foundry
+## ClaimToken Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+The `ClaimToken` contract facilitates secure and efficient token distribution for events. It allows administrators to manage token-based events and signers, while ensuring users can claim their allocated tokens once, using a valid signature from authorized signers.
 
-Foundry consists of:
+### Key Features:
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **Event Management**: Administrators can create, update, and close token events.
+- **Claim Process**: Users claim tokens via a valid signature from activated signers.
+- **Signer Management**: Administrators manage the list of authorized signers.
 
-## Documentation
+### Events:
 
-https://book.getfoundry.sh/
+- **SignerUpdated**: Triggered when a signer's status changes.
+- **EventCreated**: Triggered when a token event is created.
+- **EventUpdated**: Triggered when an event's status is updated.
+- **Claimed**: Triggered when a user claims tokens.
+
+### Functions:
+
+- **Query Functions**:
+
+  - `isSignerActivated`: Check signer status.
+  - `getEvent`: Retrieve event status.
+  - `getClaimStatus`: Check a user's claim status.
+
+- **Administrative Functions**:
+  - `updateSigners`: Manage signer list and statuses.
+  - `createNewEvent`: Initiate a token event.
+  - `updateEvent`: Modify event status.
+  - `claim`: Users claim tokens using a valid signature.
 
 ## Usage
 
@@ -36,3 +52,39 @@ $ forge test
 $ chmod +x script/DeployClaimToken.sh
 $ script/DeployClaimToken.sh
 ```
+
+## Setup & Update
+
+Here are the setup and update processes:
+
+1. **Setup Diagram**:  
+   ![Setup Diagram](assets/setupDiagram.png)
+
+2. **Update Diagram**:  
+   ![Update Diagram](assets/updateDiagram.png)
+
+## Claim Process Flow
+
+Visual representation of the claim process:
+
+1. **Eligibility Check**:  
+   ![Claim Check](assets/claimCheck.png)
+
+2. **Admin Signs Claim**:
+
+   - Admin signs with `[token address, event id, user address, amount]`  
+     ![Admin Signs](assets/adminSigns.png)
+
+3. **Relayer Submission**:  
+   ![Relayer Submission](assets/relayerSubmission.png)
+
+4. **Transaction Success**:
+
+   - Indexer notifies backend after execution, updating claim status.  
+     ![Transaction Success](assets/transactionSuccess.png)
+
+5. **Delayed Transactions**:
+   - User reclaims if no execution.  
+     ![User Reclaims](assets/userReclaims.png)
+   - Relayer retries if no execution in 3 minutes.  
+     ![Relayer Retries](assets/relayerRetries.png)
