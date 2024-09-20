@@ -50,8 +50,3 @@ Visual representation of the claim process:
 
 2. **Relayer Submission**:  
    ![Relayer Submission](assets/relayerSubmission.png)
-
-3. **Transaction Success**:
-
-   - Indexer notifies backend after execution, updating claim status.  
-     ![Transaction Success](assets/transactionSuccess.png)
