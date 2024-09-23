@@ -4,14 +4,14 @@ pragma solidity ^0.8.27;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
+import {Ownable2Step, Ownable} from "@oz/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 import {MessageHashUtils} from "@oz/utils/cryptography/MessageHashUtils.sol";
 
 import {IClaimToken} from "src/interfaces/IClaimToken.sol";
 
-contract ClaimToken is IClaimToken, Ownable, ReentrancyGuard {
+contract ClaimToken is IClaimToken, Ownable2Step, ReentrancyGuard {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 

@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 
 import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
+import {Ownable2Step, Ownable} from "@oz/access/Ownable2Step.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Errors} from "@oz/interfaces/draft-IERC6093.sol";
@@ -233,12 +233,25 @@ contract ClaimTokenTest is Test {
         address newAdmin = makeAddr("newAdmin");
 
         vm.expectEmit(true, true, false, false, address(claimToken));
-        emit Ownable.OwnershipTransferred(admin, newAdmin);
+        emit Ownable2Step.OwnershipTransferStarted(admin, newAdmin);
 
         // Transfer ownership by admin
         vm.startPrank(admin);
         claimToken.transferOwnership(newAdmin);
         vm.stopPrank();
+
+        assertEq(claimToken.pendingOwner(), newAdmin);
+        assertEq(claimToken.owner(), admin);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit Ownable.OwnershipTransferred(admin, newAdmin);
+
+        // Accept ownership by newAdmin
+        vm.startPrank(newAdmin);
+        claimToken.acceptOwnership();
+        vm.stopPrank();
+
+        assertEq(claimToken.owner(), newAdmin);
 
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
@@ -270,12 +283,25 @@ contract ClaimTokenTest is Test {
         address newAdmin = makeAddr("newAdmin");
 
         vm.expectEmit(true, true, false, false, address(claimToken));
-        emit Ownable.OwnershipTransferred(admin, newAdmin);
+        emit Ownable2Step.OwnershipTransferStarted(admin, newAdmin);
 
         // Transfer ownership by admin
         vm.startPrank(admin);
         claimToken.transferOwnership(newAdmin);
         vm.stopPrank();
+
+        assertEq(claimToken.pendingOwner(), newAdmin);
+        assertEq(claimToken.owner(), admin);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit Ownable.OwnershipTransferred(admin, newAdmin);
+
+        // Accept ownership by newAdmin
+        vm.startPrank(newAdmin);
+        claimToken.acceptOwnership();
+        vm.stopPrank();
+
+        assertEq(claimToken.owner(), newAdmin);
 
         string memory eventID = eventName[0];
         address tokenAddress = address(eventToken[0]);
@@ -342,12 +368,25 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
 
         vm.expectEmit(true, true, false, false, address(claimToken));
-        emit Ownable.OwnershipTransferred(admin, newAdmin);
+        emit Ownable2Step.OwnershipTransferStarted(admin, newAdmin);
 
         // Transfer ownership by admin
         vm.startPrank(admin);
         claimToken.transferOwnership(newAdmin);
         vm.stopPrank();
+
+        assertEq(claimToken.pendingOwner(), newAdmin);
+        assertEq(claimToken.owner(), admin);
+
+        vm.expectEmit(true, true, false, false, address(claimToken));
+        emit Ownable.OwnershipTransferred(admin, newAdmin);
+
+        // Accept ownership by newAdmin
+        vm.startPrank(newAdmin);
+        claimToken.acceptOwnership();
+        vm.stopPrank();
+
+        assertEq(claimToken.owner(), newAdmin);
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(admin)));
 
