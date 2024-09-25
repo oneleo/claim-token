@@ -140,7 +140,7 @@ contract ClaimToken is IClaimToken, Ownable2Step, ReentrancyGuard {
         require(_userClaimedAmount[tokenAddress][eventIDHash][userAddress] == 0, UserAlreadyClaimedToken(userAddress));
 
         bytes32 claimHash = getClaimHash(tokenAddress, eventID, userAddress, amount);
-        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(claimHash)));
+        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(claimHash);
         address signer = ECDSA.recover(ethSignedMessageHash, signerSignature);
 
         require(_isActivatedSigner[signer], InvalidSignerAddress(signer));
