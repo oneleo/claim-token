@@ -792,6 +792,6 @@ contract ClaimTokenTest is Test {
     // -------------------
 
     function _getEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
-        return MessageHashUtils.toEthSignedMessageHash(keccak256(abi.encode(hash)));
+        return MessageHashUtils.toEthSignedMessageHash(hash);
     }
 }
