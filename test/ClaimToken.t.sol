@@ -771,9 +771,9 @@ contract ClaimTokenTest is Test {
         vm.stopPrank();
     }
 
-    // ----------------------
-    // -- Test: fallback() --
-    // ----------------------
+    // ------------------------------------
+    // -- Test: receive() and fallback() --
+    // ------------------------------------
 
     function testCannotReceiveETH() public {
         uint256 balanceBefore = address(claimToken).balance;
