@@ -775,6 +775,15 @@ contract ClaimTokenTest is Test {
     // -- Test: fallback() --
     // ----------------------
 
+    function testCannotReceiveETH() public {
+        uint256 balanceBefore = address(claimToken).balance;
+        (bool success,) = address(claimToken).call{value: 1 ether}("");
+        uint256 balanceAfter = address(claimToken).balance;
+
+        assertEq(success, false);
+        assertEq(balanceAfter - balanceBefore, 0);
+    }
+
     function testCannotCallNonExistentFunction() public {
         (bool success,) = address(claimToken).call(abi.encodeWithSignature("nonExistentFunction()"));
 
@@ -782,9 +791,12 @@ contract ClaimTokenTest is Test {
     }
 
     function testCannotCallNonExistentFunctionWithETH() public {
+        uint256 balanceBefore = address(claimToken).balance;
         (bool success,) = address(claimToken).call{value: 1 ether}(abi.encodeWithSignature("nonExistentFunction()"));
+        uint256 balanceAfter = address(claimToken).balance;
 
         assertEq(success, false);
+        assertEq(balanceAfter - balanceBefore, 0);
     }
 
     // -------------------
