@@ -24,7 +24,8 @@ contract ClaimTokenDeploy is Script {
         vm.stopBroadcast();
 
         string memory currentNetwork = Network.getNetworkName(block.chainid);
-        string memory outputFilePath = "script/output/Address.json";
+        string memory outputFilePath = string.concat("script/output/", currentNetwork, ".json");
+
         string memory jsonData =
             string.concat('{"', currentNetwork, '":{"claimToken":"', vm.toString(address(claimToken)), '"}}');
         vm.writeJson(jsonData, outputFilePath);
