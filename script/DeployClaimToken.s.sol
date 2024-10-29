@@ -20,15 +20,15 @@ contract ClaimTokenDeploy is Script {
         signers[0] = signer;
 
         vm.startBroadcast(deployer);
-        claimToken = new ClaimToken(admin, signers);
+        claimToken = new ClaimToken{salt: keccak256(abi.encode("ClaimToken"))}(admin, signers);
         vm.stopBroadcast();
 
         string memory currentNetwork = Network.getNetworkName(block.chainid);
-        string memory outputFilePath = string.concat("script/output/", currentNetwork, ".json");
+        string memory jsonData = vm.toString(address(claimToken));
+        string memory outputFilePath = string.concat("script/output/ClaimToken.json");
+        string memory jsonPath = string.concat(".", currentNetwork, ".claimToken");
 
-        string memory jsonData =
-            string.concat('{"', currentNetwork, '":{"claimToken":"', vm.toString(address(claimToken)), '"}}');
-        vm.writeJson(jsonData, outputFilePath);
+        vm.writeJson(jsonData, outputFilePath, jsonPath);
 
         console.log("claimToken:");
         console.logAddress(address(claimToken));
