@@ -24,11 +24,11 @@ contract ClaimTokenDeploy is Script {
         vm.stopBroadcast();
 
         string memory currentNetwork = Network.getNetworkName(block.chainid);
-        string memory outputFilePath = string.concat("script/output/", currentNetwork, ".json");
+        string memory jsonData = vm.toString(address(claimToken));
+        string memory outputFilePath = string.concat("script/output/ClaimToken.json");
+        string memory jsonPath = string.concat(".", currentNetwork, ".claimToken");
 
-        string memory jsonData =
-            string.concat('{"', currentNetwork, '":{"claimToken":"', vm.toString(address(claimToken)), '"}}');
-        vm.writeJson(jsonData, outputFilePath);
+        vm.writeJson(jsonData, outputFilePath, jsonPath);
 
         console.log("claimToken:");
         console.logAddress(address(claimToken));
