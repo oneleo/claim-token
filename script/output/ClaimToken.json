@@ -1,4 +1,10 @@
 {
+  "Sepolia": {
+    "claimToken": "0xA9Bb104813EE2f988A724B91827809305614b812"
+  },
+  "Arbitrum_Sepolia": {
+    "claimToken": "0xb2bb12EB50AE5B9F52399Cf5153e6458F516F5e7"
+  },
   "Amoy": {
     "claimToken": "0xb2bb12EB50AE5B9F52399Cf5153e6458F516F5e7"
   },
