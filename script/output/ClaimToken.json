@@ -1,14 +1,14 @@
 {
   "Sepolia": {
-    "claimToken": "0xA9Bb104813EE2f988A724B91827809305614b812"
+    "claimToken": "0x5ad1DAb7BfFdB622AF8B88882DDE9EDF1F01F17A"
   },
   "Arbitrum_Sepolia": {
-    "claimToken": "0xb2bb12EB50AE5B9F52399Cf5153e6458F516F5e7"
+    "claimToken": "0x5ad1DAb7BfFdB622AF8B88882DDE9EDF1F01F17A"
   },
   "Amoy": {
-    "claimToken": "0xb2bb12EB50AE5B9F52399Cf5153e6458F516F5e7"
+    "claimToken": "0x5ad1DAb7BfFdB622AF8B88882DDE9EDF1F01F17A"
   },
   "Base_Sepolia": {
-    "claimToken": "0x541bC6cDBaD757fE7b1D768046B5aE388844e96D"
+    "claimToken": "0x5ad1DAb7BfFdB622AF8B88882DDE9EDF1F01F17A"
   }
 }

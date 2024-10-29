@@ -20,7 +20,7 @@ contract ClaimTokenDeploy is Script {
         signers[0] = signer;
 
         vm.startBroadcast(deployer);
-        claimToken = new ClaimToken(admin, signers);
+        claimToken = new ClaimToken{salt: keccak256(abi.encode("ClaimToken"))}(admin, signers);
         vm.stopBroadcast();
 
         string memory currentNetwork = Network.getNetworkName(block.chainid);
