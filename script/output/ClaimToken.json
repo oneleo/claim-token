@@ -10,5 +10,11 @@
   },
   "Base_Sepolia": {
     "claimToken": "0x5ad1DAb7BfFdB622AF8B88882DDE9EDF1F01F17A"
+  },
+  "Arbitrum": {
+    "claimToken": "0x70998efCE73aE0B51efbB4949F113fbcbD2Cd61A"
+  },
+  "Optimism": {
+    "claimToken": "0x70998efCE73aE0B51efbB4949F113fbcbD2Cd61A"
   }
 }

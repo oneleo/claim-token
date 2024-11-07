@@ -39,3 +39,23 @@ if [ $? -ne 0 ]; then
 
         forge verify-contract --watch --chain 80002 --verifier "etherscan" --etherscan-api-key ${POLYGONSCAN_API_KEY} --compiler-version 0.8.27 --evm-version shanghai --constructor-args $(cast abi-encode "constructor(address, address[])" ${CLAIM_TOKEN_ADMIN_ADDRESS} "[${CLAIM_TOKEN_SIGNER_ADDRESS}]") ${contractAddress} "src/ClaimToken.sol:ClaimToken"
 fi
+
+# Deploy the contract to Arbitrum mainnet network
+forge script script/DeployClaimToken.s.sol --fork-url ${ARB_MAINNET_NODE_RPC_URL} --broadcast --use 0.8.27 --evm-version shanghai --slow --chain-id 42161 --etherscan-api-key ${ARBISCAN_API_KEY} --verify
+
+# If verification fails, it will be re-verified here.
+if [ $? -ne 0 ]; then
+        contractAddress=$(jq -r '.Amoy.claimToken' script/output/ClaimToken.json)
+
+        forge verify-contract --watch --chain 42161 --verifier "etherscan" --etherscan-api-key ${ARBISCAN_API_KEY} --compiler-version 0.8.27 --evm-version shanghai --constructor-args $(cast abi-encode "constructor(address, address[])" ${CLAIM_TOKEN_ADMIN_ADDRESS} "[${CLAIM_TOKEN_SIGNER_ADDRESS}]") ${contractAddress} "src/ClaimToken.sol:ClaimToken"
+fi
+
+# Deploy the contract to Optimism mainnet network
+forge script script/DeployClaimToken.s.sol --fork-url ${OP_MAINNET_NODE_RPC_URL} --broadcast --use 0.8.27 --evm-version shanghai --slow --chain-id 10 --etherscan-api-key ${OPSCAN_API_KEY} --verify
+
+# If verification fails, it will be re-verified here.
+if [ $? -ne 0 ]; then
+        contractAddress=$(jq -r '.Optimism.claimToken' script/output/ClaimToken.json)
+
+        forge verify-contract --watch --chain 10 --verifier "etherscan" --etherscan-api-key ${OPSCAN_API_KEY} --compiler-version 0.8.27 --evm-version shanghai --constructor-args $(cast abi-encode "constructor(address, address[])" ${CLAIM_TOKEN_ADMIN_ADDRESS} "[${CLAIM_TOKEN_SIGNER_ADDRESS}]") ${contractAddress} "src/ClaimToken.sol:ClaimToken"
+fi

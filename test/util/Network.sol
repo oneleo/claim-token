@@ -5,6 +5,7 @@ library Network {
     uint256 constant Local = 31337;
     uint256 constant Mainnet = 1;
     uint256 constant Optimism = 10;
+    uint256 constant Arbitrum = 42161;
     uint256 constant Polygon = 137;
     uint256 constant Holesky = 17000;
     uint256 constant Mumbai = 80001;
@@ -21,6 +22,8 @@ library Network {
             network = "Mainnet";
         } else if (chainId == Optimism) {
             network = "Optimism";
+        } else if (chainId == Arbitrum) {
+            network = "Arbitrum";
         } else if (chainId == Polygon) {
             network = "Polygon";
         } else if (chainId == Holesky) {
